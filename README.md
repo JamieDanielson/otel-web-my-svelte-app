@@ -2,6 +2,60 @@
 
 Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
 
+## Instrumenting for Honeycomb
+
+### Install Packages
+
+```sh
+npm install --save \
+@honeycombio/opentelemetry-web \
+@opentelemetry/auto-instrumentations-web
+```
+
+### Get a Honeycomb API Key
+
+[Get a Honeycomb API key](https://docs.honeycomb.io/quickstart/#create-a-honeycomb-account).
+
+### Create Telemetry file
+
+Add `telemetry.ts` with SDK setup, including your API Key, in the `src/lib` directory:
+
+```ts
+// telemetry.ts
+import { HoneycombWebSDK } from '@honeycombio/opentelemetry-web';
+import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
+
+export function sdk() {
+  const sdk = new HoneycombWebSDK({
+    apiKey: 'YOUR_KEY_HERE',
+    serviceName: 'create-react-app',
+    instrumentations: [getWebAutoInstrumentations()], // add auto-instrumentation
+  });
+  sdk.start();
+};
+```
+
+### Initialize Tracing
+
+Initialize tracing at the start of your application by updating `+page.svelte`:
+
+```html
+<script>
+  import Counter from './Counter.svelte';
+  import welcome from '$lib/images/svelte-welcome.webp';
+  import welcome_fallback from '$lib/images/svelte-welcome.png';
+  import { onMount } from 'svelte';
+  onMount(async () => {
+    const {sdk} = await import('$lib/telemetry');
+    sdk();
+  })
+</script>
+```
+
+### Run
+
+Build and run your application, and then look for data in Honeycomb.
+
 ## Creating a project
 
 If you're seeing this, you've probably already done this step. Congrats!
